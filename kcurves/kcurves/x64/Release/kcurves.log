@@ -1,2 +1,8 @@
-﻿  MainForm.cpp
-  kcurves.vcxproj -> D:\Dropbox\kcurves\x64\Release\kcurves.exe
+﻿  stdafx.cpp
+  AssemblyInfo.cpp
+  kcurvesMain.cpp
+  KCurveUI.cpp
+  MainForm.cpp
+  コードを生成中...
+  .NETFramework,Version=v4.7.2.AssemblyAttributes.cpp
+  kcurves.vcxproj -> C:\Repositories\kcurves\kcurves\kcurves\x64\Release\kcurves.exe

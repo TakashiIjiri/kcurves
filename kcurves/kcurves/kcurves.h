@@ -27,7 +27,7 @@ inline double getRealSolutionOfCubicFunc
 	const double p = b - a * a / 3;
 	const double q = 2 * a*a*a / 27 - a*b/3 + c;
 
-	const double tmp = q*q/4 + p*p*p / 27;
+	const double tmp = q * q / 4 + p * p * p / 27;
 	if( tmp < 0) return 0;
 
 	const double mTmp = - q / 2 + sqrt(tmp);
@@ -69,59 +69,6 @@ typedef Eigen::Triplet<double>         ETrip ;
 
 
 
-//   solve 
-//   2  3  0  0  0     x1       8 
-//   3  0  4  0  6     x2      45
-//   0 -1 -3  2  0     x3    = -3
-//   0  0  1  0  0     x4       3
-//   0  4  2  0  1     x5      19
-inline void EigenSparseMatPractice()
-{
-	//prepare field 
-	ESpMat A(5,5);
-	Eigen::VectorXd b(5);
-
-	//fill A
-	vector< Eigen::Triplet<double> > entries; //{row, col, val}
-	entries.push_back( Eigen::Triplet<double>(0,0, 2) );
-	entries.push_back( Eigen::Triplet<double>(1,0, 3) );
-
-	entries.push_back( Eigen::Triplet<double>(0,1, 3) );
-	entries.push_back( Eigen::Triplet<double>(2,1,-1) );
-	entries.push_back( Eigen::Triplet<double>(4,1, 4) );
-
-	entries.push_back( Eigen::Triplet<double>(2,3, 2) );
-	
-	entries.push_back( Eigen::Triplet<double>(1,4, 6) );
-	entries.push_back( Eigen::Triplet<double>(4,4, 1) );
-
-	entries.push_back( Eigen::Triplet<double>(1,2, 4) );
-	entries.push_back( Eigen::Triplet<double>(2,2,-3) );
-	entries.push_back( Eigen::Triplet<double>(3,2, 1) );
-	entries.push_back( Eigen::Triplet<double>(4,2, 2) );
-
-
-	A.setFromTriplets( entries.begin(), entries.end() );
-
-	// fill b
-	b[0] = 8;
-	b[1] =45;
-	b[2] =-3;
-	b[3] = 3;
-	b[4] =19;
-
-	// solve Ax = b
-	Eigen::SparseLU<ESpMat> LU(A);  
-	Eigen::VectorXd x = LU.solve(b);
-	
-	printf("%f %f %f %f %f\n", x[0], x[1], x[2], x[3], x[4]);
-	return;
-}
-
-
-
-
-
 
 
 
@@ -149,8 +96,9 @@ inline void EigenSparseMatPractice()
 // ただし，
 // C_i1 は上記の C1[i]に対応
 // C_i0, C_i+1,0 については、『C_i0 = C_i+1,0 = (1-λi) Ci + λi Ci+1 』と計算できるのでλiとC1[i]のみ保持する
-
-
+//
+//https://qiita.com/Rijicho_nl/items/05ee4c8d77e99e29daa5
+//
 const int ITER_NUM = 15;	
 
 inline void compute_kCurves
@@ -189,7 +137,7 @@ inline void compute_kCurves
 		{
 			int nextI = (i+1)%N;
 			Ci2[i] = Ci0[nextI] = (1 - lambda[i]) * Ci1[  i  ]  +  
-				                       lambda[i]  * Ci1[nextI];
+				                         lambda[i]  * Ci1[nextI];
 		}
 
 		//3. update ti
@@ -260,6 +208,64 @@ inline void compute_kCurves
 		}
 	}
 }
+
+
+
+
+
+
+//   solve 
+//   2  3  0  0  0     x1       8 
+//   3  0  4  0  6     x2      45
+//   0 -1 -3  2  0     x3    = -3
+//   0  0  1  0  0     x4       3
+//   0  4  2  0  1     x5      19
+inline void EigenSparseMatPractice()
+{
+	//prepare field 
+	ESpMat A(5, 5);
+	Eigen::VectorXd b(5);
+
+	//fill A
+	vector< Eigen::Triplet<double> > entries; //{row, col, val}
+	entries.push_back(Eigen::Triplet<double>(0, 0, 2));
+	entries.push_back(Eigen::Triplet<double>(1, 0, 3));
+
+	entries.push_back(Eigen::Triplet<double>(0, 1, 3));
+	entries.push_back(Eigen::Triplet<double>(2, 1, -1));
+	entries.push_back(Eigen::Triplet<double>(4, 1, 4));
+
+	entries.push_back(Eigen::Triplet<double>(2, 3, 2));
+
+	entries.push_back(Eigen::Triplet<double>(1, 4, 6));
+	entries.push_back(Eigen::Triplet<double>(4, 4, 1));
+
+	entries.push_back(Eigen::Triplet<double>(1, 2, 4));
+	entries.push_back(Eigen::Triplet<double>(2, 2, -3));
+	entries.push_back(Eigen::Triplet<double>(3, 2, 1));
+	entries.push_back(Eigen::Triplet<double>(4, 2, 2));
+
+
+	A.setFromTriplets(entries.begin(), entries.end());
+
+	// fill b
+	b[0] = 8;
+	b[1] = 45;
+	b[2] = -3;
+	b[3] = 3;
+	b[4] = 19;
+
+	// solve Ax = b
+	Eigen::SparseLU<ESpMat> LU(A);
+	Eigen::VectorXd x = LU.solve(b);
+
+	printf("%f %f %f %f %f\n", x[0], x[1], x[2], x[3], x[4]);
+	return;
+}
+
+
+
+
 
 #pragma managed 
 

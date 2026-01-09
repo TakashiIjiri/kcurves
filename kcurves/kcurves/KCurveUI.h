@@ -1,13 +1,5 @@
 #pragma once
-
-//unmanaged
-//singleton
-
-
 #pragma unmanaged 
-
-
-
 
 #include "kcurves.h"
 

@@ -38,9 +38,9 @@ private:
 
 
 public:
-	vector<EVec2d> m_CPs;
-	vector<EVec2d> m_kCurveCP;
-	vector<EVec2d> m_curves;
+	vector<EVec2f> m_CPs;
+	vector<EVec2f> m_kCurveCP;
+	vector<EVec2f> m_curves;
 
 	void LBtnDown (const int x, const int y);
 	void RBtnDown (const int x, const int y);

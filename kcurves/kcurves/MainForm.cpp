@@ -33,21 +33,25 @@ System::Void MainForm::MainForm_MouseDown(System::Object^  sender, System::Windo
 
 void MainForm::RepaintFunction(Object^ sender, PaintEventArgs^ e)
 {
-	const vector<EVec2d> &CPs      = KCurveUI::getInst()->m_CPs;
-	const vector<EVec2d> &kCurveCP = KCurveUI::getInst()->m_kCurveCP;
-	const vector<EVec2d> &points   = KCurveUI::getInst()->m_curves;
+	const vector<EVec2f> &CPs      = KCurveUI::getInst()->m_CPs;
+	const vector<EVec2f> &kCurveCP = KCurveUI::getInst()->m_kCurveCP;
+	const vector<EVec2f> &points   = KCurveUI::getInst()->m_curves;
 
 	System::Drawing::Graphics^  g = e->Graphics;
 
 	for( const auto &p : CPs)  g->DrawEllipse(gcnew Pen(Color::Red,3), (int)p[0]-CIRCLE_R, (int)p[1]-CIRCLE_R, CIRCLE_R*2, CIRCLE_R*2);
 
 	
-	for( int i=0; i < (int)kCurveCP.size(); ++i)
+	for( int i = 0; i + 2 < (int)kCurveCP.size(); i = i + 3)
 	{
+    const EVec2f &p0 = kCurveCP[i];
+		const EVec2f &p1 = kCurveCP[i + 1];
+		const EVec2f &p2 = kCurveCP[i + 2];
+
 		int nexI = (i+1) % (int)kCurveCP.size();
-		g->DrawLine(gcnew Pen(Color::LightBlue,2), 
-			(int)kCurveCP[i][0], (int)kCurveCP[i][1], 
-			(int)kCurveCP[nexI][0], (int)kCurveCP[nexI][1] );
+
+		g->DrawLine(gcnew Pen(Color::LightBlue, 2), (int)p0[0], (int)p0[1], (int)p1[0], (int)p1[1]);
+		g->DrawLine(gcnew Pen(Color::Red, 2      ), (int)p1[0], (int)p1[1], (int)p2[0], (int)p2[1]);
 	}
 
 

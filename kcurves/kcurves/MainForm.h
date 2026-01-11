@@ -21,18 +21,13 @@ namespace kcurves {
 	/// </summary>
 	public ref class MainForm : public System::Windows::Forms::Form
 	{
-
-
 		static MainForm^ m_singleton;
 
 		MainForm(void)
 		{
 			InitializeComponent();
-			
 			System::Windows::Forms::Control::Paint += gcnew PaintEventHandler(this, &MainForm::RepaintFunction);
 		}
-
-
 
 	public:
 		static MainForm^ getInst() {
@@ -47,8 +42,11 @@ namespace kcurves {
 			this->Refresh();
 		}
 
-
 		void RepaintFunction(Object^ sender, PaintEventArgs^ e);
+		bool isClosed()
+		{
+			return m_checkbox_closed->Checked;
+    }
 
 	protected:
 		/// <summary>
@@ -61,6 +59,8 @@ namespace kcurves {
 				delete components;
 			}
 		}
+	private: System::Windows::Forms::CheckBox^ m_checkbox_closed;
+	protected:
 
 	protected:
 
@@ -79,13 +79,28 @@ namespace kcurves {
 		/// </summary>
 		void InitializeComponent(void)
 		{
+			this->m_checkbox_closed = (gcnew System::Windows::Forms::CheckBox());
 			this->SuspendLayout();
+			// 
+			// m_checkbox_closed
+			// 
+			this->m_checkbox_closed->AutoSize = true;
+			this->m_checkbox_closed->Checked = true;
+			this->m_checkbox_closed->CheckState = System::Windows::Forms::CheckState::Checked;
+			this->m_checkbox_closed->Location = System::Drawing::Point(13, 13);
+			this->m_checkbox_closed->Name = L"m_checkbox_closed";
+			this->m_checkbox_closed->Size = System::Drawing::Size(59, 16);
+			this->m_checkbox_closed->TabIndex = 0;
+			this->m_checkbox_closed->Text = L"Closed";
+			this->m_checkbox_closed->UseVisualStyleBackColor = true;
+			this->m_checkbox_closed->CheckedChanged += gcnew System::EventHandler(this, &MainForm::m_checkbox_closed_CheckedChanged);
 			// 
 			// MainForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 12);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(426, 445);
+			this->ClientSize = System::Drawing::Size(684, 577);
+			this->Controls->Add(this->m_checkbox_closed);
 			this->DoubleBuffered = true;
 			this->Margin = System::Windows::Forms::Padding(2);
 			this->Name = L"MainForm";
@@ -94,6 +109,7 @@ namespace kcurves {
 			this->MouseMove += gcnew System::Windows::Forms::MouseEventHandler(this, &MainForm::MainForm_MouseMove);
 			this->MouseUp += gcnew System::Windows::Forms::MouseEventHandler(this, &MainForm::MainForm_MouseUp);
 			this->ResumeLayout(false);
+			this->PerformLayout();
 
 		}
 #pragma endregion
@@ -101,6 +117,7 @@ namespace kcurves {
 	private: System::Void MainForm_MouseUp(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e)  ;
 	private: System::Void MainForm_MouseMove(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e);
 	private: System::Void MainForm_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e);
+	private: System::Void m_checkbox_closed_CheckedChanged(System::Object^ sender, System::EventArgs^ e);
 	};
 
 
@@ -108,6 +125,9 @@ namespace kcurves {
 	{
 		MainForm::getInst()->repaint();
 	}
-
+	inline bool MainForm_isClosed()
+	{
+    return MainForm::getInst()->isClosed();
+	}
 
 }

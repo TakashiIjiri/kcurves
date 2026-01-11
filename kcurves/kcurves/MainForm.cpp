@@ -27,42 +27,53 @@ System::Void MainForm::MainForm_MouseDown(System::Object^  sender, System::Windo
 }
 
 
+System::Void MainForm::m_checkbox_closed_CheckedChanged(System::Object^ sender, System::EventArgs^ e)
+{
+	KCurveUI::getInst()->UpdateCurve();
+  MainForm_repaint();
+}
 
 
 
 
 void MainForm::RepaintFunction(Object^ sender, PaintEventArgs^ e)
 {
-	const vector<EVec2f> &CPs      = KCurveUI::getInst()->m_CPs;
-	const vector<EVec2f> &kCurveCP = KCurveUI::getInst()->m_kCurveCP;
-	const vector<EVec2f> &points   = KCurveUI::getInst()->m_curves;
+	const vector<EVec2f> &cps        = KCurveUI::getInst()->m_cps;
+	const vector<EVec2f> &kcurve_cps = KCurveUI::getInst()->m_kcurve_cps;
+	const vector<EVec2f> &points     = KCurveUI::getInst()->m_curves;
 
 	System::Drawing::Graphics^  g = e->Graphics;
+	for( const auto &p : cps)  g->DrawEllipse(gcnew Pen(Color::Red,3), (int)p[0]-CIRCLE_R, (int)p[1]-CIRCLE_R, CIRCLE_R*2, CIRCLE_R*2);
 
-	for( const auto &p : CPs)  g->DrawEllipse(gcnew Pen(Color::Red,3), (int)p[0]-CIRCLE_R, (int)p[1]-CIRCLE_R, CIRCLE_R*2, CIRCLE_R*2);
-
-	
-	for( int i = 0; i + 2 < (int)kCurveCP.size(); i = i + 3)
+	for (int i = 0; i + 2 < (int)kcurve_cps.size(); i = i + 3)
 	{
-    const EVec2f &p0 = kCurveCP[i];
-		const EVec2f &p1 = kCurveCP[i + 1];
-		const EVec2f &p2 = kCurveCP[i + 2];
-
-		int nexI = (i+1) % (int)kCurveCP.size();
-
+		const EVec2f& p0 = kcurve_cps[i];
+		const EVec2f& p1 = kcurve_cps[i + 1];
+		const EVec2f& p2 = kcurve_cps[i + 2];
 		g->DrawLine(gcnew Pen(Color::LightBlue, 2), (int)p0[0], (int)p0[1], (int)p1[0], (int)p1[1]);
-		g->DrawLine(gcnew Pen(Color::Red, 2      ), (int)p1[0], (int)p1[1], (int)p2[0], (int)p2[1]);
+		g->DrawLine(gcnew Pen(Color::Red, 2), (int)p1[0], (int)p1[1], (int)p2[0], (int)p2[1]);
 	}
 
 
-	for( int i=0; i < (int)points.size(); ++i)
+	if ( isClosed())
 	{
-		int nexI = (i+1) % (int)points.size();
-		g->DrawLine(gcnew Pen(Color::Blue,3), 
-			(int)points[i   ][0], (int)points[i   ][1], 
-			(int)points[nexI][0], (int)points[nexI][1] );
+		for (int i = 0; i < (int)points.size(); ++i)
+		{
+			int nexI = (i + 1) % (int)points.size();
+			g->DrawLine(gcnew Pen(Color::Blue, 3),
+				(int)points[i][0], (int)points[i][1],
+				(int)points[nexI][0], (int)points[nexI][1]);
+		}
 	}
-
+	else
+	{
+		for (int i = 0; i < (int)points.size()-1; ++i)
+		{
+			g->DrawLine(gcnew Pen(Color::Blue, 3),
+				(int)points[i][0], (int)points[i][1],
+				(int)points[i+1][0], (int)points[i + 1][1]);
+		}
+	}
 
 
 

@@ -38,8 +38,8 @@ private:
 
 
 public:
-	vector<EVec2f> m_CPs;
-	vector<EVec2f> m_kCurveCP;
+	vector<EVec2f> m_cps;
+	vector<EVec2f> m_kcurve_cps;
 	vector<EVec2f> m_curves;
 
 	void LBtnDown (const int x, const int y);
@@ -50,14 +50,15 @@ public:
 	void MBtnUp   (const int x, const int y);
 	void MouseMove(const int x, const int y);
 
+	void UpdateCurve();
 
 private:
 	int pickCP(const int x, const int y)
 	{
-		for( int i=0; i < m_CPs.size(); ++i)
+		for( int i=0; i < m_cps.size(); ++i)
 		{
-			double d = (m_CPs[i][0] - x) * (m_CPs[i][0] - x) + 
-				       (m_CPs[i][1] - y) * (m_CPs[i][1] - y);
+			double d = (m_cps[i][0] - x) * (m_cps[i][0] - x) + 
+				         (m_cps[i][1] - y) * (m_cps[i][1] - y);
 			if( d < CIRCLE_R * CIRCLE_R) return i;
 		}
 		return -1;

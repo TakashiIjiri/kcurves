@@ -14,6 +14,7 @@ typedef Eigen::Triplet<float>      ETrip;
 
 #include <vector>
 #include <iostream>
+#include <algorithm>
 
 
 inline void Trace(EVec2f& p)
@@ -66,9 +67,9 @@ inline float TriangleArea(
 
 
 
-// input : cps (2D control points,        size:N)
-// output: out_cps  (2D Bezier control points, size:3 * N, each 3 construct quad bezier)
-// output:λi  (weight to compute Bezier cp, size:N)
+// input : cps        2D control points,        size:N)
+// output: out_cps    2D Bezier control points, size:3 * N, each 3 construct quad bezier)
+// output: out_points 2D curve
 //
 // note
 // 各制御点 cps[i] に対して、2次ベジエ制御点 Ci0, Ci1, Ci2を生成する
@@ -99,8 +100,9 @@ inline void compute_kCurves
 
 	for( int iter = 0; iter < ITER_NUM; ++iter)
 	{
-		//1. update lambda (use 0.5 for the first iteration (更新してもいい気もするけど..))
-		if( iter != 0 ) 
+		//1. update lambda (use 0.5 for the first iteration )
+		// iter < ITER_NUM / 2 は、安定化のためのtrick
+		if( iter != 0 && iter < ITER_NUM / 2)
 		{
 			for( int i = 0; i < N; ++i)
 			{
@@ -189,63 +191,214 @@ inline void compute_kCurves
 	}
 }
 
+//memo 
+// 
+// 参照論文: "Kappa-Curves: Interpolating B-splines with Local Curvature Control" (2017)
+// 
+// Step 4の線形システムについて
+// 
+// 論文中の式 pi = α c(i-1,1) + β c(i,1) + γ c(i+1,1) は以下のように導出される。
+//
+// ★ 2次元ベジエの式3より
+// pi = (1 - ti)^2 * c(i,0) + 2 ti (1 - ti) * c(i,1) + ti^2 * c(i,2)
+// 
+// ★接続条件の定義 (Eq.5)
+// c(i,2) =     (1 - λi) * c( i ,1) +     λi * c(i+1,1)
+// c(i,0) = (1 - λ(i-1)) * c(i-1,1) + λ(i-1) * c( i ,1),  c(i,0) = c(i-1,2)
+//
+// 上記 Eq.5 を Eq.3 へ代入して整理 
+// pi = [ (1-λ(i-1))(1-ti)^2 ]                       * c(i-1,1)  <-- α(i)
+//    + [ λ(i-1)(1-ti)^2 + 2ti(1-ti) + (1-λi)ti^2 ] * c( i ,1)  <-- β(i)
+//    + [ λi * ti^2 ]                                * c(i+1,1)  <-- γ(i)
+//
+//
+// ◯ 開いた曲線の場合 p0, p1, ..., pN に対して、
+// (1)p0, pN は端点としてよけ、p1～p(N-1)のそれぞれに2Dベジエ曲線を作る
+// (2) Step 4の線形システムは、以下のようになる
+// 
+// 
+// (*)p1 において  c(1,0),c(1,1), c(1,2)によりベジエができるが、c(1,0)が端点（p0) になるので、、、
+// 
+// pi = (1 - ti)^2 * c(i,0) + 2 ti (1 - ti) * c(i,1) + ti^2 * c(i,2)
+// c(i,2) =     (1 - λi) * c( i ,1) +     λi * c(i+1,1)
+// c(i,0) = p0
+// これを代入すると、、 
+// pi = (1 - ti)^2 * p0 
+//    + [ 2ti(1 - ti) + (1 - λi)ti^2 ] * c( i ,1)  
+//    + [ λi * ti^2 ]                  * c(i+1,1)
+// 
+// (*)p(N-1)では c(N-1,0),c(N-1,1), c(N-1,2)によりベジエができるが、c(N-1,2)が端点（pN) になるので、、、
+// 
+// pi = (1 - ti)^2 * c(i,0) + 2 ti (1 - ti) * c(i,1) + ti^2 * c(i,2)
+// c(i,0) = (1 - λ(i-1)) * c(i-1,1) + λ(i-1) * c( i ,1)
+// c(i,2) = pN
+// これを代入すると、、 
+// pi = [ (1 - λ(i-1))(1 - ti)^2 ]         * c(i-1,1)
+//    + [ λ(i-1)(1 - ti)^2 + 2ti(1 - ti) ] * c( i ,1)
+//    + [ ti^2 ]                            * pN
+// 
+// N=1の時の対応
+// pi = (1 - ti)^2 * start_cp + 2 ti (1 - ti) * c(1,1) + ti^2 * end_cp
+// c(1,1) = ( pi - (1 - ti)^2 * start_cp - ti^2 * end_cp ) / ( 2 ti (1 - ti) )
 
 
 
+//
+// input : cps        2D control points,        size: N 
+// output: out_cps    2D Bezier control points, size: 3 * (N-2), each 3 construct quad bezier
+// output: out_points 2D curve
+//
+// note
+// 各制御点 cps[i] に対して、2次ベジエ制御点 Ci0, Ci1, Ci2を生成する
+//
+// ただし，
+// cps[1  ]に対する曲線は、cps[0]=C10, C11, C12で決定される
+// cps[N-2]に対する曲線は、CN-2,0, CN-2,1, CN-2,2=cps[N-1]で決定される
 
-/*
-//   solve 
-//   2  3  0  0  0     x1       8 
-//   3  0  4  0  6     x2      45
-//   0 -1 -3  2  0     x3    = -3
-//   0  0  1  0  0     x4       3
-//   0  4  2  0  1     x5      19
-inline void EigenSparseMatPractice()
+
+//TODO N=3のと起動するか？
+//TODO 置くまで届いていない理由が不明
+
+inline void compute_kCurves_open
+(
+	const std::vector<EVec2f>& _cps,
+
+	int  num_sample, //sampling number of each curve segment
+	std::vector<EVec2f>& out_cps,
+	std::vector<EVec2f>& out_points
+)
 {
-	//prepare field 
-	ESpMat A(5, 5);
-	Eigen::VectorXd b(5);
+	if (_cps.size() < 3) return;
+	if (num_sample < 3) num_sample = 3;
 
-	//fill A
-	vector< Eigen::Triplet<double> > entries; //{row, col, val}
-	entries.push_back(Eigen::Triplet<double>(0, 0, 2));
-	entries.push_back(Eigen::Triplet<double>(1, 0, 3));
+	//N 本の 2次ベジエを生成する
+	const int N = (int)_cps.size() - 2;
+  const EVec2f start_cp = _cps.front();
+  const EVec2f end_cp   = _cps.back();
 
-	entries.push_back(Eigen::Triplet<double>(0, 1, 3));
-	entries.push_back(Eigen::Triplet<double>(2, 1, -1));
-	entries.push_back(Eigen::Triplet<double>(4, 1, 4));
+  std::vector<EVec2f> cps(_cps.begin() + 1, _cps.end() - 1);
+	std::vector<float>  lambda(N, 0.5f), ti(N);
+	std::vector<EVec2f> Ci0(N), Ci1 = cps, Ci2(N);
+	
+  Ci0[0] = start_cp;
+  Ci2[N - 1] = end_cp;
 
-	entries.push_back(Eigen::Triplet<double>(2, 3, 2));
+	for (int iter = 0; iter < ITER_NUM; ++iter)
+	{
+		//1. update lambda (use 0.5 for the first iteration )
+		// iter < ITER_NUM / 2 は、安定化のためのtrick
+		// lambda[N-1]は不要なことに注意
+		if (iter != 0 && iter < ITER_NUM / 2)
+		{
+			for (int i = 0; i < N-1; ++i)
+			{
+				float A = sqrt(TriangleArea(Ci0[i], Ci1[i]    , Ci1[i + 1]));
+				float B = sqrt(TriangleArea(Ci0[i], Ci1[i]    , Ci1[i + 1]));
+				float C = sqrt(TriangleArea(Ci1[i], Ci1[i + 1], Ci2[i + 1]));
+				lambda[i] = A / (B + C);
+			}
+		}
 
-	entries.push_back(Eigen::Triplet<double>(1, 4, 6));
-	entries.push_back(Eigen::Triplet<double>(4, 4, 1));
+		//2. update Ci2, Ci+1,0
+		for (int i = 0; i < N-1; ++i)
+		{
+			Ci2[i] = Ci0[i + 1] = (1 - lambda[i]) * Ci1[i] + lambda[i] * Ci1[i + 1];
+		}
+		Ci0[  0  ] = start_cp;
+		Ci2[N - 1] = end_cp;
 
-	entries.push_back(Eigen::Triplet<double>(1, 2, 4));
-	entries.push_back(Eigen::Triplet<double>(2, 2, -3));
-	entries.push_back(Eigen::Triplet<double>(3, 2, 1));
-	entries.push_back(Eigen::Triplet<double>(4, 2, 2));
+		//3. update ti
+		for (int i = 0; i < N; ++i)
+		{
+			//solve eq(4)
+			EVec2f Ci2_Ci0 = Ci2[i] - Ci0[i];
+			EVec2f Ci0_pi  = Ci0[i] - cps[i];
+			float a = Ci2_Ci0.squaredNorm();
+			float b = 3 * Ci2_Ci0.dot(Ci0_pi);
+			float c = (3 * Ci0[i] - 2 * cps[i] - Ci2[i]).dot(Ci0_pi);
+			float d = -Ci0_pi.squaredNorm();
+			ti[i] = (a == 0) ? 0.5f : SolveCubicFunction(b / a, c / a, d / a);
+			if (std::isnan(ti[i])) ti[i] = 0.5f;
+			ti[i] = std::max(1e-4f, std::min(1.0f - 1e-4f, ti[i]));
+		}
 
+		//4. update C1 
+		ESpMat A(N, N);
+		Eigen::VectorXf b1(N), b2(N);
+		std::vector< Eigen::Triplet<float> > entries; //{row, col, val}
 
-	A.setFromTriplets(entries.begin(), entries.end());
+		for (int i = 0; i < N; ++i)
+		{
+			const float t = ti[i];
+			if (i ==0 && i == N-1) // N =1 のとき
+			{
+				entries.push_back(ETrip(i, i, 2 * t * (1 - t)));
+				b1[i] = cps[i][0] - (1 - t) * (1 - t) * start_cp[0] - t * t * end_cp[0];
+				b2[i] = cps[i][1] - (1 - t) * (1 - t) * start_cp[1] - t * t * end_cp[1];
+      }
+			else if (i == 0)
+			{
+				const float b = 2 * t * (1 - t) + (1 - lambda[i]) * t * t;
+				const float c = lambda[i] * t * t;
+				entries.push_back(ETrip(i, i    , b));
+				entries.push_back(ETrip(i, i + 1, c));
+				b1[i] = cps[i][0] - (1 - t) * (1 - t) * start_cp[0];
+				b2[i] = cps[i][1] - (1 - t) * (1 - t) * start_cp[1];
+      }
+      else if (i == N - 1)
+			{
+				const float a = (1 - lambda[i - 1]) * (1 - t) * (1 - t) ;
+				const float b = lambda[i - 1] * (1 - t) * (1 - t) + 2 * t * (1 - t);
+				entries.push_back(ETrip(i, i-1, a));
+				entries.push_back(ETrip(i, i  , b));
+				b1[i] = cps[i][0] - t * t * end_cp[0];
+				b2[i] = cps[i][1] - t * t * end_cp[1];
+			}
+			else
+			{
+				const float a = (1 - lambda[i - 1]) * (1 - t) * (1 - t);
+				const float b = lambda[i - 1] * (1 - t) * (1 - t) + (2 - (1 + lambda[i]) * t) * t;
+				const float c = lambda[i] * t * t;
+				entries.push_back(ETrip(i, i-1, a));
+				entries.push_back(ETrip(i,  i , b));
+				entries.push_back(ETrip(i, i+1, c));
+				b1[i] = cps[i][0];
+				b2[i] = cps[i][1];
+			}
+		}
 
-	// fill b
-	b[0] = 8;
-	b[1] = 45;
-	b[2] = -3;
-	b[3] = 3;
-	b[4] = 19;
+		A.setFromTriplets(entries.begin(), entries.end());
+		// solve Ax = b
+		Eigen::SparseLU<ESpMat> LU(A);
+		Eigen::VectorXf x = LU.solve(b1);
+		Eigen::VectorXf y = LU.solve(b2);
 
-	// solve Ax = b
-	Eigen::SparseLU<ESpMat> LU(A);
-	Eigen::VectorXd x = LU.solve(b);
+		for (int i = 0; i < N; ++i) Ci1[i] << x[i], y[i];
+	}
 
-	printf("%f %f %f %f %f\n", x[0], x[1], x[2], x[3], x[4]);
-	return;
+	out_cps.clear();
+	for (int i = 0; i < N; ++i)
+	{
+		out_cps.push_back(Ci0[i]);
+		out_cps.push_back(Ci1[i]);
+		out_cps.push_back(Ci2[i]);
+	}
+
+	out_points.clear();
+	for (int i = 0; i < N; ++i)
+	{
+		const EVec2f& C0 = Ci0[i];
+		const EVec2f& C1 = Ci1[i];
+		const EVec2f& C2 = Ci2[i];
+
+		for (int j = 0; j < num_sample; ++j)
+		{
+			float t = j * 1.0f / (num_sample-1);
+			EVec2f p = (1 - t) * (1 - t) * C0 + 2 * t * (1 - t) * C1 + t * t * C2;
+			out_points.push_back(p);
+		}
+	}
 }
-*/
-
-
-
 
 
 #pragma managed 

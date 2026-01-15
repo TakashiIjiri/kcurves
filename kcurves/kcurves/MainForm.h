@@ -60,6 +60,7 @@ namespace kcurves {
 			}
 		}
 	private: System::Windows::Forms::CheckBox^ m_checkbox_closed;
+	private: System::Windows::Forms::CheckBox^ m_cb_catmullrom;
 	protected:
 
 	protected:
@@ -80,6 +81,7 @@ namespace kcurves {
 		void InitializeComponent(void)
 		{
 			this->m_checkbox_closed = (gcnew System::Windows::Forms::CheckBox());
+			this->m_cb_catmullrom = (gcnew System::Windows::Forms::CheckBox());
 			this->SuspendLayout();
 			// 
 			// m_checkbox_closed
@@ -95,11 +97,24 @@ namespace kcurves {
 			this->m_checkbox_closed->UseVisualStyleBackColor = true;
 			this->m_checkbox_closed->CheckedChanged += gcnew System::EventHandler(this, &MainForm::m_checkbox_closed_CheckedChanged);
 			// 
+			// m_cb_catmulrom
+			// 
+			this->m_cb_catmullrom->AutoSize = true;
+			this->m_cb_catmullrom->Checked = true;
+			this->m_cb_catmullrom->CheckState = System::Windows::Forms::CheckState::Checked;
+			this->m_cb_catmullrom->Location = System::Drawing::Point(13, 35);
+			this->m_cb_catmullrom->Name = L"m_cb_catmulrom";
+			this->m_cb_catmullrom->Size = System::Drawing::Size(154, 16);
+			this->m_cb_catmullrom->TabIndex = 1;
+			this->m_cb_catmullrom->Text = L"Show Catmul Rom ƒ¿=0.5";
+			this->m_cb_catmullrom->UseVisualStyleBackColor = true;
+			// 
 			// MainForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 12);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(684, 577);
+			this->Controls->Add(this->m_cb_catmullrom);
 			this->Controls->Add(this->m_checkbox_closed);
 			this->DoubleBuffered = true;
 			this->Margin = System::Windows::Forms::Padding(2);

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "KCurveUI.h"
 #include "MainForm.h"
+#include "catmullromspline.h"
 
 
 using namespace kcurves;
@@ -17,6 +18,8 @@ void KCurveUI::UpdateCurve()
 		compute_kCurves(m_cps, 15, m_kcurve_cps, m_curves);
 	else
 		compute_kCurves_open(m_cps, 15, m_kcurve_cps, m_curves);
+
+	m_catmullrom_curve = catmullromspline::compute_catmullrom_spline(m_cps, 0.5f,30);
 }
 
 

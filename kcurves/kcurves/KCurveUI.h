@@ -42,6 +42,9 @@ public:
 	vector<EVec2f> m_kcurve_cps;
 	vector<EVec2f> m_curves;
 
+	vector<EVec2f> m_catmullrom_curve;
+
+
 	void LBtnDown (const int x, const int y);
 	void RBtnDown (const int x, const int y);
 	void MBtnDown (const int x, const int y);

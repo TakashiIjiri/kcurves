@@ -142,6 +142,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="catmullromspline.h" />
     <ClInclude Include="kcurves.h" />
     <ClInclude Include="KCurveUI.h" />
     <ClInclude Include="MainForm.h">

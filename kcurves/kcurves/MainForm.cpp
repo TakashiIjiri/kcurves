@@ -39,11 +39,11 @@ System::Void MainForm::m_checkbox_closed_CheckedChanged(System::Object^ sender, 
 void MainForm::RepaintFunction(Object^ sender, PaintEventArgs^ e)
 {
 	const vector<EVec2f> &cps        = KCurveUI::getInst()->m_cps;
-	const vector<EVec2f> &kcurve_cps = KCurveUI::getInst()->m_kcurve_cps;
+	const vector<EVec2f>& kcurve_cps = KCurveUI::getInst()->m_kcurve_cps;
 	const vector<EVec2f> &points     = KCurveUI::getInst()->m_curves;
 
 	System::Drawing::Graphics^  g = e->Graphics;
-	for( const auto &p : cps)  g->DrawEllipse(gcnew Pen(Color::Red,3), (int)p[0]-CIRCLE_R, (int)p[1]-CIRCLE_R, CIRCLE_R*2, CIRCLE_R*2);
+	for (const auto& p : cps)  g->DrawEllipse(gcnew Pen(Color::Red, 3), (int)p[0] - CIRCLE_R, (int)p[1] - CIRCLE_R, CIRCLE_R * 2, CIRCLE_R * 2);
 
 	for (int i = 0; i + 2 < (int)kcurve_cps.size(); i = i + 3)
 	{
@@ -75,6 +75,22 @@ void MainForm::RepaintFunction(Object^ sender, PaintEventArgs^ e)
 		}
 	}
 
+		
+	if (m_cb_catmullrom->Checked)
+	{
+		int dx = 150;
 
+		for (const auto& p : cps) 
+			g->DrawEllipse(gcnew Pen(Color::Green, 3), (int)p[0] - CIRCLE_R + dx, (int)p[1] - CIRCLE_R, CIRCLE_R * 2, CIRCLE_R * 2);
+
+    const vector<EVec2f>& points_cr = KCurveUI::getInst()->m_catmullrom_curve;
+
+    for (int i = 0; i < (int)points_cr.size() - 1; ++i)
+		{
+			g->DrawLine(gcnew Pen(Color::Green, 2),
+				(int)points_cr[i][0] + dx, (int)points_cr[i][1],
+				(int)points_cr[i + 1][0] + dx, (int)points_cr[i + 1][1]);
+    }		
+	}
 
 }
